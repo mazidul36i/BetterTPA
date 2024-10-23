@@ -1,0 +1,21 @@
+name: BetterTPA
+version: '1.0-SNAPSHOT'
+main: com.gliesestudio.mc.BetterTPA
+api-version: '1.21'
+authors: [ Mazidul Islam ]
+description: Better TPA is the goto plugin to manage player tpa and set warps with ease.
+website: https://mazidul.com
+
+commands:
+  tpa:
+    description: Request to teleport to another player.
+    usage: /tpa <player>
+  tpahere:
+    description: Request to teleport another player to you.
+    usage: /tpahere <player>
+  tpaccept:
+    description: Accept a teleport request.
+    usage: /tpaccept
+  tpdeny:
+    description: Deny a teleport request.
+    usage: /tpdeny
