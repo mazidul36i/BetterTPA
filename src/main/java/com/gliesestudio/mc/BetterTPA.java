@@ -5,6 +5,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -14,16 +17,19 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
-public final class BetterTPA extends JavaPlugin {
+public final class BetterTPA extends JavaPlugin implements Listener {
 
     private static final Map<UUID, TPARequest> tpaRequests = new HashMap<>();
+    private static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>();
     private static final long requestTimeout = 30L; // 30 seconds for timeout
+    private static final long teleportDelay = 3L; // 3 seconds
 
     private final Logger logger = getLogger();
 
     @Override
     public void onEnable() {
         logger.info("BetterTPA plugin enabled");
+        getServer().getPluginManager().registerEvents(this, this); // Register event listener
     }
 
     @Override
@@ -62,13 +68,9 @@ public final class BetterTPA extends JavaPlugin {
                     handleTPAHereRequest(requester, target);
                 }
 
-                case "tpaccept" -> {
-                    handleTPAccept(requester);
-                }
+                case "tpaccept" -> handleTPAccept(requester);
 
-                case "tpdeny" -> {
-                    handleTPDeny(requester);
-                }
+                case "tpdeny" -> handleTPDeny(requester);
             }
         } else {
             sender.sendMessage("Only players can use this command.");
@@ -108,14 +110,12 @@ public final class BetterTPA extends JavaPlugin {
             Player tpaPlayer = Bukkit.getPlayer(pendingRequest.getTpaPlayer());
             Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.getTpaToPlayer());
             if (tpaPlayer != null && tpaPlayer.isOnline() && tpaToPlayer != null && tpaToPlayer.isOnline()) {
-                tpaPlayer.teleport(tpaToPlayer);
-                tpaToPlayer.sendMessage(String.format("%s has been teleported to you.", tpaPlayer.getName()));
-                tpaPlayer.sendMessage(String.format("You have been teleported to %s.", tpaToPlayer.getName()));
-                tpaRequests.remove(sender.getUniqueId());
+                // Start the delayed teleport with movement check
+                startDelayedTeleport(tpaPlayer, tpaToPlayer);
             } else {
                 sender.sendMessage("Requester is no longer online.");
-                tpaRequests.remove(sender.getUniqueId());
             }
+            tpaRequests.remove(sender.getUniqueId());
         } else {
             sender.sendMessage("You have no pending TPA requests.");
         }
@@ -150,4 +150,46 @@ public final class BetterTPA extends JavaPlugin {
             }
         }.runTaskLater(this, requestTimeout * 20);
     }
+
+    private void startDelayedTeleport(@NotNull Player tpaPlayer, @NotNull Player tpaToPlayer) {
+        // Cancel any previous pending teleport for this player
+        if (pendingTeleports.containsKey(tpaPlayer.getUniqueId())) {
+            pendingTeleports.get(tpaPlayer.getUniqueId()).cancel();
+        }
+
+        // Create a new BukkitRunnable for the delayed teleport
+        BukkitRunnable teleportTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                tpaPlayer.teleport(tpaToPlayer);
+                tpaToPlayer.sendMessage(String.format("%s has been teleported to you.", tpaPlayer.getName()));
+                tpaPlayer.sendMessage(String.format("You have been teleported to %s.", tpaToPlayer.getName()));
+                pendingTeleports.remove(tpaPlayer.getUniqueId());
+            }
+        };
+
+        // Store the teleport task in the map
+        pendingTeleports.put(tpaPlayer.getUniqueId(), teleportTask);
+
+        // Start the 3-second delay
+        teleportTask.runTaskLater(this, teleportDelay * 20);
+
+        tpaPlayer.sendMessage("Teleporting in 3 seconds. Do not move!");
+    }
+
+    @EventHandler
+    public void onPlayerMove(@NotNull PlayerMoveEvent event) {
+        Player player = event.getPlayer();
+        // Check if the player is in the pending teleports list
+        if (pendingTeleports.containsKey(player.getUniqueId())) {
+            // Check if the player has actually moved
+            if (event.getFrom().getX() != event.getTo().getX() || event.getFrom().getZ() != event.getTo().getZ()) {
+                // Cancel the teleport
+                pendingTeleports.get(player.getUniqueId()).cancel();
+                pendingTeleports.remove(player.getUniqueId());
+                player.sendMessage("Teleport cancelled because you moved.");
+            }
+        }
+    }
+
 }
