@@ -1,6 +1,9 @@
 package com.gliesestudio.mc;
 
 import com.gliesestudio.mc.model.TPARequest;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.title.Title;
+import net.kyori.adventure.util.Ticks;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -157,10 +160,25 @@ public final class BetterTPA extends JavaPlugin implements Listener {
             pendingTeleports.get(tpaPlayer.getUniqueId()).cancel();
         }
 
+        // Show teleporting message.
+        Title.Times times = Title.Times.times(Ticks.duration(10), Ticks.duration(3 * 20), Ticks.duration(10));
+        tpaPlayer.showTitle(Title.title(
+                Component.text("Teleporting..."),
+                Component.text("Don't move!"),
+                times
+        ));
+
         // Create a new BukkitRunnable for the delayed teleport
         BukkitRunnable teleportTask = new BukkitRunnable() {
             @Override
             public void run() {
+                // Play teleport sound
+                tpaPlayer.playSound(
+                        tpaPlayer.getLocation(),
+                        "minecraft:entity.creeper.primed",
+                        1.2f,
+                        1.0f
+                );
                 tpaPlayer.teleport(tpaToPlayer);
                 tpaToPlayer.sendMessage(String.format("%s has been teleported to you.", tpaPlayer.getName()));
                 tpaPlayer.sendMessage(String.format("You have been teleported to %s.", tpaToPlayer.getName()));
