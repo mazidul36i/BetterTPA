@@ -10,12 +10,17 @@ commands:
   tpa:
     description: Request to teleport to another player.
     usage: /tpa <player>
-  tpahere:
+  tphere:
     description: Request to teleport another player to you.
-    usage: /tpahere <player>
+    usage: /tphere <player>
   tpaccept:
     description: Accept a teleport request.
     usage: /tpaccept
   tpdeny:
     description: Deny a teleport request.
     usage: /tpdeny
+  back:
+    description: Teleport back to your last death or TPA location
+    usage: /back
+    aliases:
+      - /tpaback
