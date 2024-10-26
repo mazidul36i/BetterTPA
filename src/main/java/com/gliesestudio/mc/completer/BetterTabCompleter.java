@@ -22,8 +22,9 @@
  * SOFTWARE.
  */
 
-package com.gliesestudio.mc;
+package com.gliesestudio.mc.completer;
 
+import com.gliesestudio.mc.service.warp.WarpStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;

@@ -24,7 +24,10 @@
 
 package com.gliesestudio.mc;
 
+import com.gliesestudio.mc.completer.BetterTabCompleter;
 import com.gliesestudio.mc.model.TPARequest;
+import com.gliesestudio.mc.schedule.DelayedTeleport;
+import com.gliesestudio.mc.service.warp.WarpStorage;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -49,8 +52,8 @@ import java.util.logging.Logger;
 public final class BetterTPA extends JavaPlugin implements Listener {
 
     private static final Map<UUID, TPARequest> tpaRequests = new HashMap<>();
-    static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>();
-    static final Map<UUID, Location> lastLocations = new HashMap<>();
+    public static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>(); // TODO: make it more secure
+    public static final Map<UUID, Location> lastLocations = new HashMap<>();  // TODO: make it more secure
     private static final long requestTimeout = 30L; // 30 seconds for timeout
 
     private final Logger logger = getLogger();
