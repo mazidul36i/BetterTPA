@@ -24,3 +24,15 @@ commands:
     usage: /back
     aliases:
       - /tpaback
+
+  setwarp:
+    description: Set a warp location.
+    usage: /setwarp <name>
+
+  warp:
+    description: Teleport to a warp.
+    usage: /warp <name>
+
+  warps:
+    description: List available warps.
+    usage: /warps

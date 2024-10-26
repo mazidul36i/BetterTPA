@@ -5,8 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.title.Title;
-import net.kyori.adventure.util.Ticks;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
@@ -20,47 +19,55 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nullable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Logger;
 
 public final class BetterTPA extends JavaPlugin implements Listener {
 
     private static final Map<UUID, TPARequest> tpaRequests = new HashMap<>();
-    private static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>();
-    private static final Map<UUID, Location> lastLocations = new HashMap<>();
+    static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>();
+    static final Map<UUID, Location> lastLocations = new HashMap<>();
     private static final long requestTimeout = 30L; // 30 seconds for timeout
-    private static final long teleportDelay = 3L; // 3 seconds
 
     private final Logger logger = getLogger();
 
+    private WarpStorage warpStorage;
+
     @Override
     public void onEnable() {
-        logger.info("BetterTPA plugin enabled");
+        displayStartingMessage();
+        // Create a new instance of WarpStorage to manage warp locations
+        warpStorage = new WarpStorage(getDataFolder(), logger);
         getServer().getPluginManager().registerEvents(this, this); // Register event listener
     }
 
     @Override
     public void onDisable() {
-        logger.info("BetterTPA plugin disabled");
+        logger.info("\u001B[33mBetterTPA plugin disabled\u001B[0m");
+    }
+
+    private void displayStartingMessage() {
+        logger.info("\u001B[32m╔═══════════════════════════════╗\u001B[0m");
+        logger.info("\u001B[32m║          Better TPA           ║\u001B[0m");
+        logger.info("\u001B[32m╚═══════════════════════════════╝\u001B[0m");
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (sender instanceof Player player) {
+            /*for (int i = 0; i < args.length; i++) {
+                args[i] = args[i].replaceAll("&", "§");
+            }*/
             switch (command.getName().toLowerCase()) {
 
                 case "tpa" -> {
                     if (args.length == 0) {
-                        sender.sendMessage("Usage: /tpa <player>");
+                        sender.sendMessage("§cInvalid command! Usage: /tpa <player>");
                         return true;
                     }
                     Player target = Bukkit.getPlayer(args[0]);
                     if (target == null || !target.isOnline()) {
-                        sender.sendMessage("Player not found or offline.");
+                        sender.sendMessage("§cPlayer not found or offline.");
                         return true;
                     }
                     handleTPARequest(player, target);
@@ -68,12 +75,12 @@ public final class BetterTPA extends JavaPlugin implements Listener {
 
                 case "tphere" -> {
                     if (args.length == 0) {
-                        sender.sendMessage("Usage: /tphere <player>");
+                        sender.sendMessage("§cInvalid command! Usage: /tphere <player>");
                         return true;
                     }
                     Player target = Bukkit.getPlayer(args[0]);
                     if (target == null || !target.isOnline()) {
-                        sender.sendMessage("Player not found or offline.");
+                        sender.sendMessage("§cPlayer not found or offline.");
                         return true;
                     }
                     handleTPHereRequest(player, target);
@@ -85,11 +92,38 @@ public final class BetterTPA extends JavaPlugin implements Listener {
 
                 // Try to teleport the player back to their last death or teleported location.
                 case "back" -> handleBackCommand(player);
+
+                case "setwarp" -> {
+                    if (args.length != 1) {
+                        player.sendMessage("§cInvalid command! Usage: /setwarp <name>");
+                        return true;
+                    }
+                    handleSetWarpCommand(player, args[0]);
+                }
+
+                case "warp" -> {
+                    if (args.length != 1) {
+                        player.sendMessage("§cInvalid command! Usage: /warp <name>");
+                        return true;
+                    }
+                    handleWarpCommand(player, args[0]);
+                }
+
+                case "warps" -> handleWarpsCommand(player);
+
+                default -> {
+                    return false;
+                }
             }
         } else {
-            sender.sendMessage("Only players can use this command.");
+            sender.sendMessage("§cOnly players can use this command.");
         }
         return true;
+    }
+
+    @Override
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        return new BetterTabCompleter(warpStorage).onTabComplete(sender, command, alias, args);
     }
 
     private void handleTPARequest(@NotNull Player requester, @NotNull Player target) {
@@ -98,10 +132,18 @@ public final class BetterTPA extends JavaPlugin implements Listener {
                 requester.getUniqueId(),
                 target.getUniqueId()
         ));
-        requester.sendMessage(String.format("Teleport request sent to %s.", target.getName()));
+        requester.sendMessage(String.format("§aTeleport request sent to %s.", target.getName()));
         // Send the message to the target player
-        TextComponent tpaMessage = createTPAMessage(String.format("%s has requested to teleport to you.", requester.getName()));
+        TextComponent tpaMessage = createTPAMessage(String.format("§6%s has requested to teleport to you.", requester.getName()));
         target.sendMessage(tpaMessage);
+
+        // Play teleport request received sound
+        target.playSound(
+                target,
+                "minecraft:entity.endermite.death",
+                1.0f,
+                1.0f
+        );
 
         // Set up a timeout for the request
         handleRequestTimeout(requester, target);
@@ -113,9 +155,17 @@ public final class BetterTPA extends JavaPlugin implements Listener {
                 target.getUniqueId(),
                 requester.getUniqueId()
         ));
-        requester.sendMessage(String.format("Teleport request sent to %s.", target.getName()));
-        TextComponent tpaMessage = createTPAMessage(String.format("%s has requested you to teleport to them.", requester.getName()));
+        requester.sendMessage(String.format("§aTeleport request sent to %s.", target.getName()));
+        TextComponent tpaMessage = createTPAMessage(String.format("§6%s has requested you to teleport to them.", requester.getName()));
         target.sendMessage(tpaMessage);
+
+        // Play teleport request received sound
+        target.playSound(
+                target,
+                "minecraft:entity.endermite.death",
+                1.0f,
+                1.0f
+        );
 
         // Set up a timeout for the request
         handleRequestTimeout(requester, target);
@@ -124,17 +174,22 @@ public final class BetterTPA extends JavaPlugin implements Listener {
     private void handleTPAccept(@NotNull Player sender) {
         TPARequest pendingRequest = tpaRequests.get(sender.getUniqueId());
         if (pendingRequest != null) {
+            Player requester = Bukkit.getPlayer(pendingRequest.getRequester());
             Player tpaPlayer = Bukkit.getPlayer(pendingRequest.getTpaPlayer());
             Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.getTpaToPlayer());
             if (tpaPlayer != null && tpaPlayer.isOnline() && tpaToPlayer != null && tpaToPlayer.isOnline()) {
-                // Start the delayed teleport with movement check
-                startDelayedTeleport(tpaPlayer, tpaToPlayer, null);
+                // Start the delayed teleport
+                assert requester != null;
+                requester.sendMessage(String.format("§a%s has accepted your teleport request.", sender.getName()));
+                sender.sendMessage(String.format("§aYou have accepted the teleport request from %s.", requester.getName()));
+                new DelayedTeleport() {
+                }.playerTeleport(tpaPlayer, tpaToPlayer).start(this);
             } else {
-                sender.sendMessage("Requester is no longer online.");
+                sender.sendMessage("§eRequester is no longer online.");
             }
             tpaRequests.remove(sender.getUniqueId());
         } else {
-            sender.sendMessage("You have no pending TPA requests.");
+            sender.sendMessage("§cYou have no pending teleport requests.");
         }
     }
 
@@ -143,15 +198,15 @@ public final class BetterTPA extends JavaPlugin implements Listener {
         if (pendingRequest != null) {
             Player requester = Bukkit.getPlayer(pendingRequest.getRequester());
             if (requester != null && requester.isOnline()) {
-                requester.sendMessage(String.format("%s has denied your TPA request.", sender.getName()));
-                sender.sendMessage(String.format("You have denied the TPA request from %s.", requester.getName()));
+                requester.sendMessage(String.format("§c%s has denied your teleport request.", sender.getName()));
+                sender.sendMessage(String.format("§eYou have denied the teleport request from %s.", requester.getName()));
                 tpaRequests.remove(sender.getUniqueId());
             } else {
-                sender.sendMessage("Requester is no longer online.");
+                sender.sendMessage("§eRequester is no longer online.");
                 tpaRequests.remove(sender.getUniqueId());
             }
         } else {
-            sender.sendMessage("You have no pending TPA requests.");
+            sender.sendMessage("§cYou have no pending teleport requests.");
         }
     }
 
@@ -160,9 +215,35 @@ public final class BetterTPA extends JavaPlugin implements Listener {
 
         if (lastLocations.containsKey(playerId)) {
             Location lastLocation = lastLocations.get(playerId);
-            startDelayedTeleport(player, null, lastLocation);
+            new DelayedTeleport() {
+            }.backTeleport(player, lastLocation).start(this);
         } else {
-            player.sendMessage("No previous location found to teleport back to.");
+            player.sendMessage("§eNo previous location found to teleport back to.");
+        }
+    }
+
+    private void handleSetWarpCommand(Player player, String warpName) {
+        Location playerLocation = player.getLocation();
+        warpStorage.setWarp(warpName, playerLocation);
+        player.sendMessage("§aWarp §r" + warpName + "§a has been set.");
+    }
+
+    private void handleWarpCommand(Player player, String warpName) {
+        if (warpStorage.warpExists(warpName)) {
+            Location warpLocation = warpStorage.getWarp(warpName);
+            new DelayedTeleport() {
+            }.warpTeleport(player, warpLocation).start(this);
+        } else {
+            player.sendMessage("§cWarp '" + warpName + "' does not exist.");
+        }
+    }
+
+    private void handleWarpsCommand(Player player) {
+        Set<String> warpNames = warpStorage.getWarpNames();
+        if (warpNames.isEmpty()) {
+            player.sendMessage("§eNo warps have been set yet.");
+        } else {
+            player.sendMessage("§aAvailable warps: §r" + String.join(", ", warpNames));
         }
     }
 
@@ -172,83 +253,36 @@ public final class BetterTPA extends JavaPlugin implements Listener {
             public void run() {
                 if (tpaRequests.containsKey(target.getUniqueId())) {
                     tpaRequests.remove(target.getUniqueId());
-                    requester.sendMessage(String.format("Your TPA request to %s has timed out.", target.getName()));
-                    target.sendMessage(String.format("The TPA request from %s has timed out.", requester.getName()));
+                    requester.sendMessage(String.format("§cYour teleport request to %s has timed out.", target.getName()));
+                    target.sendMessage(String.format("§eThe teleport request from %s has timed out.", requester.getName()));
                 }
             }
         }.runTaskLater(this, requestTimeout * 20);
-    }
-
-    private void startDelayedTeleport(@NotNull Player tpaPlayer, @Nullable Player tpaToPlayer, @Nullable Location location) {
-        // Cancel any previous pending teleport for this player
-        if (pendingTeleports.containsKey(tpaPlayer.getUniqueId())) {
-            pendingTeleports.get(tpaPlayer.getUniqueId()).cancel();
-        }
-
-        // Show teleporting message.
-        Title.Times times = Title.Times.times(Ticks.duration(10), Ticks.duration(3 * 20), Ticks.duration(10));
-        tpaPlayer.showTitle(Title.title(
-                Component.text("Teleporting..."),
-                Component.text("Don't move!"),
-                times
-        ));
-
-        // Create a new BukkitRunnable for the delayed teleport
-        BukkitRunnable teleportTask = new BukkitRunnable() {
-            @Override
-            public void run() {
-                // Play teleport sound
-                tpaPlayer.playSound(
-                        tpaPlayer,
-                        "minecraft:entity.creeper.primed",
-                        1.2f,
-                        1.0f
-                );
-
-                // Store the TPA player's previous location
-                lastLocations.put(tpaPlayer.getUniqueId(), tpaPlayer.getLocation());
-
-                if (Objects.nonNull(tpaToPlayer)) {
-                    tpaPlayer.teleport(tpaToPlayer);
-                    tpaToPlayer.sendMessage(String.format("%s has been teleported to you.", tpaPlayer.getName()));
-                    tpaPlayer.sendMessage(String.format("You have been teleported to %s.", tpaToPlayer.getName()));
-                } else if (Objects.nonNull(location)) {
-                    tpaPlayer.teleport(location);
-                    tpaPlayer.sendMessage("You have been teleported back to your last location.");
-                } else {
-                    tpaPlayer.sendMessage("No valid teleport target found.");
-                }
-                pendingTeleports.remove(tpaPlayer.getUniqueId());
-            }
-        };
-
-        // Store the teleport task in the map
-        pendingTeleports.put(tpaPlayer.getUniqueId(), teleportTask);
-        // Start the 3-second delay
-        teleportTask.runTaskLater(this, teleportDelay * 20);
     }
 
     // Send clickable TPA accept/deny messages to the target player
     private @NotNull TextComponent createTPAMessage(String text) {
         // Create the "TPA Accept" button
         Component acceptButton = Component.text("[Accept]")
+                .decorate(TextDecoration.BOLD)
                 .color(net.kyori.adventure.text.format.NamedTextColor.GREEN)
                 .hoverEvent(HoverEvent.showText(Component.text("Click to accept the teleport request")))
                 .clickEvent(ClickEvent.runCommand("/tpaccept"));
 
         // Create the "TPA Deny" button
         Component denyButton = Component.text("[Deny]")
+                .decorate(TextDecoration.BOLD)
                 .color(net.kyori.adventure.text.format.NamedTextColor.RED)
                 .hoverEvent(HoverEvent.showText(Component.text("Click to deny the teleport request")))
                 .clickEvent(ClickEvent.runCommand("/tpdeny"));
 
         // Combine both buttons with a message
         return Component.text(text)
-                .append(Component.text(" You can "))
+                .append(Component.text("§6 You can "))
                 .append(acceptButton)
-                .append(Component.text(" or "))
+                .append(Component.text("§6 or "))
                 .append(denyButton)
-                .append(Component.text(" the request."));
+                .append(Component.text("§6 the request."));
     }
 
     @EventHandler
@@ -261,7 +295,7 @@ public final class BetterTPA extends JavaPlugin implements Listener {
                 // Cancel the teleport
                 pendingTeleports.get(player.getUniqueId()).cancel();
                 pendingTeleports.remove(player.getUniqueId());
-                player.sendMessage("Teleport cancelled because you moved.");
+                player.sendMessage("§cTeleport cancelled because you moved.");
             }
         }
     }
