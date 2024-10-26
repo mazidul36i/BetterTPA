@@ -47,38 +47,3 @@ processResources {
         expand props
     }
 }
-
-// Define the output directory for the copied jar
-def externalDir = file("/home/mazidul/Apps/Paper 1.21.1/plugins")
-
-// Ensure the directory exists before copying the jar
-tasks.register("createOutputDir") {
-    doLast {
-        if (!externalDir.exists()) {
-            println "Creating directory: $externalDir"
-            externalDir.mkdirs()
-        } else {
-            println "Directory already exists: $externalDir"
-        }
-    }
-}
-
-// Custom task to copy the jar file after it's built
-tasks.register('copyJar', Copy) {
-    dependsOn tasks.jar
-    from tasks.named('jar').get().archiveFile
-    into externalDir
-    doLast {
-        println "JAR file copied to $externalDir"
-    }
-}
-
-// Ensure the output directory exists before copying
-tasks.copyJar {
-    dependsOn tasks.createOutputDir
-}
-
-// Make the `build` task depend on `copyJar`
-tasks.build {
-    dependsOn tasks.copyJar
-}
