@@ -106,7 +106,7 @@ public abstract class DelayedTeleport {
      */
     public void afterTeleport(TeleportType teleportType) {
         if (teleportType == TeleportType.TO_PLAYER) {
-            player.sendMessage(String.format("You have been teleported to %s.", toPlayer.getName()));
+            player.sendMessage(String.format("§aYou have been teleported to %s.", toPlayer.getName()));
         } else if (teleportType == TeleportType.WARP) {
             player.teleport(location);
             player.sendMessage("§aYou have been teleported to the warp location.");
