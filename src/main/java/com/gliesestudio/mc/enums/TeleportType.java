@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.gliesestudio.mc;
+package com.gliesestudio.mc.enums;
 
 public enum TeleportType {
 

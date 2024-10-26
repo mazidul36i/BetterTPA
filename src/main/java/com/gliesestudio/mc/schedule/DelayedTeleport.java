@@ -22,8 +22,9 @@
  * SOFTWARE.
  */
 
-package com.gliesestudio.mc;
+package com.gliesestudio.mc.schedule;
 
+import com.gliesestudio.mc.enums.TeleportType;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
