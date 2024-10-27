@@ -30,6 +30,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
 import org.bukkit.Location;
+import org.bukkit.Particle;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -117,7 +118,7 @@ public abstract class DelayedTeleport {
         TeleportRepository.cancelPendingTeleport(player.getUniqueId());
 
         // Show teleporting message.
-        showTeleportingTitle();
+        showTeleportingTitle(plugin);
 
         // Create a new BukkitRunnable for the delayed teleport
         BukkitRunnable teleportTask = new BukkitRunnable() {
@@ -185,13 +186,31 @@ public abstract class DelayedTeleport {
     /**
      * This method shows the teleporting title to the player.
      */
-    private void showTeleportingTitle() {
+    private void showTeleportingTitle(Plugin plugin) {
         Title.Times times = Title.Times.times(Ticks.duration(10), Ticks.duration(delay * 20), Ticks.duration(10));
         player.showTitle(Title.title(
                 Component.text("§aTeleporting..."),
                 Component.text("§eDon't move!"),
                 times
         ));
+
+        // Particle Effect
+        new BukkitRunnable() {
+            int iterations = 0;
+            final int maxIterations = (int) (delay * 20); // Match title duration
+
+            @Override
+            public void run() {
+                if (iterations >= maxIterations) {
+                    this.cancel();
+                    return;
+                }
+
+                Location particleLocation = new Location(player.getWorld(), player.getX(), player.getLocation().getY(), player.getZ());
+                player.spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS, particleLocation, 10, 0.35, 0.25, 0.35, 0);
+                iterations++;
+            }
+        }.runTaskTimer(plugin, 0, 1); // Run every tick (20 ticks per second)
     }
 
 }
