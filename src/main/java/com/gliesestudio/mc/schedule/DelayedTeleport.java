@@ -25,6 +25,7 @@
 package com.gliesestudio.mc.schedule;
 
 import com.gliesestudio.mc.enums.TeleportType;
+import com.gliesestudio.mc.repository.TeleportRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
@@ -33,9 +34,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
-
-import static com.gliesestudio.mc.BetterTPA.lastLocations;
-import static com.gliesestudio.mc.BetterTPA.pendingTeleports;
 
 /**
  * This class provides a delayed teleport functionality for the Better TPA plugin.
@@ -116,9 +114,7 @@ public abstract class DelayedTeleport {
      */
     final public void start(@NotNull Plugin plugin) {
         // Cancel any previous pending teleport for this player
-        if (pendingTeleports.containsKey(player.getUniqueId())) {
-            pendingTeleports.get(player.getUniqueId()).cancel();
-        }
+        TeleportRepository.cancelPendingTeleport(player.getUniqueId());
 
         // Show teleporting message.
         showTeleportingTitle();
@@ -127,9 +123,9 @@ public abstract class DelayedTeleport {
         BukkitRunnable teleportTask = new BukkitRunnable() {
             @Override
             public void run() {
-                // Removed pending teleport and store the player's current location.
-                pendingTeleports.remove(player.getUniqueId());
-                lastLocations.put(player.getUniqueId(), player.getLocation());
+                // Remove pending teleport and store the player's current location.
+                TeleportRepository.removePendingTeleport(player.getUniqueId());
+                TeleportRepository.setLastLocation(player.getUniqueId(), player.getLocation());
 
                 // Call the beforeTeleport method.
                 beforeTeleport();
@@ -149,7 +145,7 @@ public abstract class DelayedTeleport {
         };
 
         // Store the teleport task in the map
-        pendingTeleports.put(player.getUniqueId(), teleportTask);
+        TeleportRepository.addPendingTeleport(player.getUniqueId(), teleportTask);
         // Start the 3-second delay
         teleportTask.runTaskLater(plugin, delay * 20);
     }
