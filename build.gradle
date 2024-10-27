@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.gliesestudio.mc"
-version = "1.0-SNAPSHOT"
+version = "1.0-alpha"
 
 repositories {
     mavenCentral()
@@ -29,6 +29,10 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+}
+
+jar {
+    archiveFileName = "${project.name}-${project.version}.jar"
 }
 
 tasks.withType(JavaCompile).configureEach {
