@@ -28,6 +28,7 @@ import com.gliesestudio.mc.completer.BetterTabCompleter;
 import com.gliesestudio.mc.model.TPARequest;
 import com.gliesestudio.mc.schedule.DelayedTeleport;
 import com.gliesestudio.mc.service.warp.WarpStorage;
+import com.gliesestudio.mc.utility.ApplicationUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -49,6 +50,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.*;
 import java.util.logging.Logger;
 
+/**
+ * This class is the main class for the Better TPA plugin.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @since 1.0
+ */
 public final class BetterTPA extends JavaPlugin implements Listener {
 
     private static final Map<UUID, TPARequest> tpaRequests = new HashMap<>();
@@ -138,6 +146,16 @@ public final class BetterTPA extends JavaPlugin implements Listener {
 
                 case "warps" -> handleWarpsCommand(player);
 
+                case "delwarp" -> {
+                    if (sender.hasPermission("bettertpa.delwarp")) {
+                        if (args.length != 1) {
+                            player.sendMessage("§cInvalid command! Usage: /delwarp <name>");
+                            return true;
+                        }
+                        handleDelWarpCommand(player, args[0]);
+                    }
+                }
+
                 default -> {
                     return false;
                 }
@@ -202,8 +220,8 @@ public final class BetterTPA extends JavaPlugin implements Listener {
         TPARequest pendingRequest = tpaRequests.get(sender.getUniqueId());
         if (pendingRequest != null) {
             Player requester = Bukkit.getPlayer(pendingRequest.getRequester());
-            Player tpaPlayer = Bukkit.getPlayer(pendingRequest.getTpaPlayer());
-            Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.getTpaToPlayer());
+            Player tpaPlayer = Bukkit.getPlayer(pendingRequest.getPlayer());
+            Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.getTeleportToPlayer());
             if (tpaPlayer != null && tpaPlayer.isOnline() && tpaToPlayer != null && tpaToPlayer.isOnline()) {
                 // Start the delayed teleport
                 assert requester != null;
@@ -274,6 +292,15 @@ public final class BetterTPA extends JavaPlugin implements Listener {
         }
     }
 
+    private void handleDelWarpCommand(Player player, String warpName) {
+        if (warpStorage.warpExists(warpName)) {
+            warpStorage.deleteWarp(warpName); // Assuming you add a deleteWarp method to WarpStorage
+            player.sendMessage("§aWarp '" + warpName + "' has been deleted.");
+        } else {
+            player.sendMessage("§cWarp '" + warpName + "' does not exist.");
+        }
+    }
+
     private void handleRequestTimeout(Player requester, Player target) {
         new BukkitRunnable() {
             @Override
@@ -314,11 +341,13 @@ public final class BetterTPA extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onPlayerMove(@NotNull PlayerMoveEvent event) {
-        Player player = event.getPlayer();
-        // Check if the player is in the pending teleports list
-        if (pendingTeleports.containsKey(player.getUniqueId())) {
-            // Check if the player has actually moved
-            if (event.getFrom().getX() != event.getTo().getX() || event.getFrom().getZ() != event.getTo().getZ()) {
+        // Check if the player has actually moved
+        if (ApplicationUtils.hasPlayerMoved(event.getFrom(), event.getTo())) {
+            logger.info("from: " + event.getFrom());
+            logger.info("to: " + event.getTo());
+            Player player = event.getPlayer();
+            // Check if the player is in the pending teleports list
+            if (pendingTeleports.containsKey(player.getUniqueId())) {
                 // Cancel the teleport
                 pendingTeleports.get(player.getUniqueId()).cancel();
                 pendingTeleports.remove(player.getUniqueId());

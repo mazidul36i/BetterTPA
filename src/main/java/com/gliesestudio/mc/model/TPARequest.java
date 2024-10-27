@@ -24,44 +24,42 @@
 
 package com.gliesestudio.mc.model;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.UUID;
 
-public class TPARequest {
+/**
+ * This class represents a teleport request from one player to another.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @since 1.0
+ */
+public class TPARequest implements Serializable {
 
-    private UUID requester;
-    private UUID tpaPlayer;
-    private UUID tpaToPlayer;
+    @Serial
+    private static final long serialVersionUID = -6482985386023709154L;
 
-    public TPARequest() {
-    }
+    private final UUID requester;
+    private final UUID player;
+    private final UUID teleportToPlayer;
 
-    public TPARequest(UUID requester, UUID tpaPlayer, UUID tpaToPlayer) {
+    public TPARequest(UUID requester, UUID player, UUID teleportToPlayer) {
         this.requester = requester;
-        this.tpaPlayer = tpaPlayer;
-        this.tpaToPlayer = tpaToPlayer;
+        this.player = player;
+        this.teleportToPlayer = teleportToPlayer;
     }
 
     public UUID getRequester() {
         return requester;
     }
 
-    public void setRequester(UUID requester) {
-        this.requester = requester;
+    public UUID getPlayer() {
+        return player;
     }
 
-    public UUID getTpaPlayer() {
-        return tpaPlayer;
+    public UUID getTeleportToPlayer() {
+        return teleportToPlayer;
     }
 
-    public void setTpaPlayer(UUID tpaPlayer) {
-        this.tpaPlayer = tpaPlayer;
-    }
-
-    public UUID getTpaToPlayer() {
-        return tpaToPlayer;
-    }
-
-    public void setTpaToPlayer(UUID tpaToPlayer) {
-        this.tpaToPlayer = tpaToPlayer;
-    }
 }

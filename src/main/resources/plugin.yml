@@ -16,14 +16,18 @@ commands:
   tpaccept:
     description: Accept a teleport request.
     usage: /tpaccept
+    aliases:
+      - accept
   tpdeny:
     description: Deny a teleport request.
     usage: /tpdeny
+    aliases:
+      - deny
   back:
     description: Teleport back to your last death or TPA location
     usage: /back
     aliases:
-      - /tpaback
+      - tpback
 
   setwarp:
     description: Set a warp location.
@@ -36,3 +40,9 @@ commands:
   warps:
     description: List available warps.
     usage: /warps
+
+  delwarp:
+    description: Delete a warp location.
+    usage: /delwarp <name>
+    permission: bettertpa.delwarp # Add a permission node
+    permission-message: §cYou don't have permission to use this command.
