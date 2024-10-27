@@ -2,7 +2,7 @@ name: Build and Release JAR
 
 on:
   release:
-    types: [created]
+    types: [ created ]
 
 jobs:
   build:
@@ -15,8 +15,17 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v2
         with:
-          distribution: 'temurin' # Use any distribution you prefer
-          java-version: '21'      # Set to your Java version
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Get project version and jar file name
+        id: get_version
+        run: |
+          PROJECT_NAME=$(./gradlew -q projectName) # You may need a task to print the project name if not directly available
+          VERSION=$(./gradlew -q printVersion)      # Run a custom Gradle task to print the version
+          echo "PROJECT_NAME=$PROJECT_NAME" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "JAR_NAME=${PROJECT_NAME}-${VERSION}.jar" >> $GITHUB_ENV
 
       - name: Build project with Gradle
         run: ./gradlew build
@@ -25,6 +34,6 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/libs/your-artifact-name.jar # Adjust the path if needed
-          asset_name: your-artifact-name.jar
+          asset_path: build/libs/${{ env.JAR_NAME }}
+          asset_name: ${{ env.JAR_NAME }}
           asset_content_type: application/java-archive
