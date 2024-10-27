@@ -25,6 +25,6 @@ jobs:
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/libs/Better TPA-1.0-alpha.jar # Adjust the path if needed
+          asset_path: ./build/libs/Better TPA-1.0-alpha.jar # Adjust the path if needed
           asset_name: Better TPA-1.0-alpha.jar
           asset_content_type: application/java-archive
