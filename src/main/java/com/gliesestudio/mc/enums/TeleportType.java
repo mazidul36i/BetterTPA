@@ -24,6 +24,13 @@
 
 package com.gliesestudio.mc.enums;
 
+/**
+ * This enum represents the different types of teleports that can be performed.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @since 1.0
+ */
 public enum TeleportType {
 
     TO_PLAYER, BACK, WARP

@@ -25,6 +25,7 @@
 package com.gliesestudio.mc.service.warp;
 
 import org.bukkit.Location;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -37,7 +38,24 @@ import java.util.logging.Logger;
 
 import static org.bukkit.Bukkit.getServer;
 
+/**
+ * This class manages the storage and retrieval of warp locations.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @since 1.0
+ */
 public class WarpStorage {
+
+    private static final String CONFIG_FILE = "warps.yml";
+    public static final String WARP_PATH_DESC = ".desc";
+    public static final String WARP_PATH_WORLD = ".world";
+    public static final String WARP_PATH_X = ".x";
+    public static final String WARP_PATH_Y = ".y";
+    public static final String WARP_PATH_Z = ".z";
+    public static final String WARP_PATH_YAW = ".yaw";
+    public static final String WARP_PATH_PITCH = ".pitch";
+
     private final File file;
     private final FileConfiguration config;
     private final Map<String, Location> warps = new HashMap<>();
@@ -53,7 +71,7 @@ public class WarpStorage {
             logger.severe("Failed to create data folder for BetterTPA.");
         }
 
-        this.file = new File(dataFolder, "warps.yml");
+        this.file = new File(dataFolder, CONFIG_FILE);
         if (!file.exists()) {
             try {
                 file.createNewFile();
@@ -82,29 +100,35 @@ public class WarpStorage {
         return warps.containsKey(warpName);
     }
 
+    public void deleteWarp(String warpName) {
+        warps.remove(warpName);
+        config.set(warpName, null);
+        saveConfig();
+    }
+
     private void saveWarp(String warpName, Location location) {
-        String path = "warps." + warpName;
-        config.set(path + ".desc", warpName);
-        config.set(path + ".world", location.getWorld().getName());
-        config.set(path + ".x", location.getX());
-        config.set(path + ".y", location.getY());
-        config.set(path + ".z", location.getZ());
-        config.set(path + ".yaw", location.getYaw());
-        config.set(path + ".pitch", location.getPitch());
+        config.set(warpName + WARP_PATH_DESC, warpName);
+        config.set(warpName + WARP_PATH_WORLD, location.getWorld().getName());
+        config.set(warpName + WARP_PATH_X, location.getX());
+        config.set(warpName + WARP_PATH_Y, location.getY());
+        config.set(warpName + WARP_PATH_Z, location.getZ());
+        config.set(warpName + WARP_PATH_YAW, location.getYaw());
+        config.set(warpName + WARP_PATH_PITCH, location.getPitch());
         saveConfig();
     }
 
     private void loadWarps() {
-        if (config.contains("warps")) {
-            for (String warpName : config.getConfigurationSection("warps").getKeys(false)) {
-                String path = "warps." + warpName;
-                String worldName = config.getString(path + ".world");
-                String desc = config.getString(path + ".desc");
-                double x = config.getDouble(path + ".x");
-                double y = config.getDouble(path + ".y");
-                double z = config.getDouble(path + ".z");
-                float yaw = (float) config.getDouble(path + ".yaw");
-                float pitch = (float) config.getDouble(path + ".pitch");
+        Configuration configRoot = config.getRoot();
+        if (configRoot != null) {
+            logger.info("Root keys: " + config.getRoot().getKeys(false));
+            for (String warpName : configRoot.getKeys(false)) {
+                String worldName = config.getString(warpName + WARP_PATH_WORLD);
+                String desc = config.getString(warpName + WARP_PATH_DESC);
+                double x = config.getDouble(warpName + WARP_PATH_X);
+                double y = config.getDouble(warpName + WARP_PATH_Y);
+                double z = config.getDouble(warpName + WARP_PATH_Z);
+                float yaw = (float) config.getDouble(warpName + WARP_PATH_YAW);
+                float pitch = (float) config.getDouble(warpName + WARP_PATH_PITCH);
 
                 if (worldName == null) {
                     logger.severe("World name is not found for warp " + warpName + ".");

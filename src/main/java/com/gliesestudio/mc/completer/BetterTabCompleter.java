@@ -24,6 +24,7 @@
 
 package com.gliesestudio.mc.completer;
 
+import com.gliesestudio.mc.enums.Commands;
 import com.gliesestudio.mc.service.warp.WarpStorage;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -37,6 +38,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * This class provides tab completion for the Better TPA plugin.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @see TabCompleter
+ * @see WarpStorage
+ * @see Commands
+ * @since 1.0
+ */
 public class BetterTabCompleter implements TabCompleter {
 
     private final WarpStorage warpStorage;
@@ -49,16 +60,23 @@ public class BetterTabCompleter implements TabCompleter {
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         return switch (command.getName().toLowerCase()) {
             // Handle tab completion for /tpa and /tphere commands.
-            case "tpa", "tphere" -> tpaSuggestions(sender, args);
+            case Commands.TPA.TPA, Commands.TPA.TPHERE -> tpaSuggestions(sender, args);
 
-            // Handle tab completion for /warp command.
-            case "warp" -> warpSuggestions(sender, args);
+            // Handle tab completion for /warp and /delwarp commands.
+            case Commands.WARP.WARP, Commands.WARP.DELWARP -> warpSuggestions(sender, args);
 
             // Return empty list to prevent any uncontrolled suggestions.
             default -> new ArrayList<>();
         };
     }
 
+    /**
+     * Provides tab completion suggestions for the /tpa and /tphere commands.
+     *
+     * @param sender The command sender.
+     * @param args   The command arguments.
+     * @return A list of tab completion suggestions.
+     */
     private List<String> tpaSuggestions(@NotNull CommandSender sender, @NotNull String[] args) {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1 && sender instanceof Player player) {
@@ -73,6 +91,13 @@ public class BetterTabCompleter implements TabCompleter {
         return suggestions;
     }
 
+    /**
+     * Provides tab completion suggestions for the /warp and /delwarp commands.
+     *
+     * @param sender The command sender.
+     * @param args   The command arguments.
+     * @return A list of tab completion suggestions.
+     */
     private List<String> warpSuggestions(@NotNull CommandSender sender, @NotNull String[] args) {
         List<String> suggestions = new ArrayList<>();
         if (args.length == 1 && sender instanceof Player) {
@@ -86,7 +111,6 @@ public class BetterTabCompleter implements TabCompleter {
         }
         return suggestions;
     }
-
 
 }
 

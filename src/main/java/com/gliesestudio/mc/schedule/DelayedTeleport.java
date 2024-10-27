@@ -25,6 +25,7 @@
 package com.gliesestudio.mc.schedule;
 
 import com.gliesestudio.mc.enums.TeleportType;
+import com.gliesestudio.mc.repository.TeleportRepository;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 import net.kyori.adventure.util.Ticks;
@@ -34,9 +35,17 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
-import static com.gliesestudio.mc.BetterTPA.lastLocations;
-import static com.gliesestudio.mc.BetterTPA.pendingTeleports;
-
+/**
+ * This class provides a delayed teleport functionality for the Better TPA plugin.
+ *
+ * @author Mazidul Islam
+ * @version 1.0
+ * @implNote This class is designed to be extended by other classes to customize the behavior of {@link #beforeTeleport}
+ * and {@link #afterTeleport}.
+ * @see TeleportType
+ * @see BukkitRunnable
+ * @since 1.0
+ */
 public abstract class DelayedTeleport {
 
     private TeleportType teleportType = null;
@@ -45,6 +54,13 @@ public abstract class DelayedTeleport {
     private Player toPlayer = null;
     private Location location = null;
 
+    /**
+     * This method sets the teleport type to {@link TeleportType#TO_PLAYER} and sets the player and the target player.
+     *
+     * @param player   The player who is being teleported.
+     * @param toPlayer The player who is being teleported to.
+     * @return This {@link DelayedTeleport} instance.
+     */
     final public DelayedTeleport playerTeleport(Player player, Player toPlayer) {
         this.teleportType = TeleportType.TO_PLAYER;
         this.player = player;
@@ -52,6 +68,13 @@ public abstract class DelayedTeleport {
         return this;
     }
 
+    /**
+     * This method sets the teleport type to {@link TeleportType#WARP} and sets the player and the warp location.
+     *
+     * @param player       The player who is being teleported.
+     * @param warpLocation The warp location.
+     * @return This {@link DelayedTeleport} instance.
+     */
     final public DelayedTeleport warpTeleport(Player player, Location warpLocation) {
         this.teleportType = TeleportType.WARP;
         this.player = player;
@@ -59,6 +82,13 @@ public abstract class DelayedTeleport {
         return this;
     }
 
+    /**
+     * This method sets the teleport type to {@link TeleportType#BACK} and sets the player and the last location.
+     *
+     * @param player       The player who is being teleported.
+     * @param lastLocation The last location.
+     * @return This {@link DelayedTeleport} instance.
+     */
     final public DelayedTeleport backTeleport(Player player, Location lastLocation) {
         this.teleportType = TeleportType.BACK;
         this.player = player;
@@ -66,16 +96,25 @@ public abstract class DelayedTeleport {
         return this;
     }
 
+    /**
+     * This method starts the delayed teleport with a custom delay.
+     *
+     * @param plugin The plugin instance.
+     * @param delay  The delay in seconds.
+     */
     final public void start(@NotNull Plugin plugin, long delay) {
         this.delay = delay;
         start(plugin);
     }
 
+    /**
+     * This method starts the delayed teleport.
+     *
+     * @param plugin The plugin instance.
+     */
     final public void start(@NotNull Plugin plugin) {
         // Cancel any previous pending teleport for this player
-        if (pendingTeleports.containsKey(player.getUniqueId())) {
-            pendingTeleports.get(player.getUniqueId()).cancel();
-        }
+        TeleportRepository.cancelPendingTeleport(player.getUniqueId());
 
         // Show teleporting message.
         showTeleportingTitle();
@@ -84,7 +123,10 @@ public abstract class DelayedTeleport {
         BukkitRunnable teleportTask = new BukkitRunnable() {
             @Override
             public void run() {
-                pendingTeleports.remove(player.getUniqueId());
+                // Remove pending teleport and store the player's current location.
+                TeleportRepository.removePendingTeleport(player.getUniqueId());
+                TeleportRepository.setLastLocation(player.getUniqueId(), player.getLocation());
+
                 // Call the beforeTeleport method.
                 beforeTeleport();
 
@@ -97,16 +139,13 @@ public abstract class DelayedTeleport {
                     return;
                 }
 
-                // Store the TPA player's previous location
-                lastLocations.put(player.getUniqueId(), player.getLocation());
-
                 // Call the afterTeleport method.
                 afterTeleport(teleportType);
             }
         };
 
         // Store the teleport task in the map
-        pendingTeleports.put(player.getUniqueId(), teleportTask);
+        TeleportRepository.addPendingTeleport(player.getUniqueId(), teleportTask);
         // Start the 3-second delay
         teleportTask.runTaskLater(plugin, delay * 20);
     }
@@ -143,6 +182,9 @@ public abstract class DelayedTeleport {
         }
     }
 
+    /**
+     * This method shows the teleporting title to the player.
+     */
     private void showTeleportingTitle() {
         Title.Times times = Title.Times.times(Ticks.duration(10), Ticks.duration(delay * 20), Ticks.duration(10));
         player.showTitle(Title.title(
