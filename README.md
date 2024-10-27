@@ -13,6 +13,7 @@ directory (folder) and you are good to go. No need to configure anything.
 - **SetWarp:** Set a warp location.
 - **Warp:** Teleport to a warp.
 - **Warps:** List available warps.
+- **DelWarp:** Delete a warp location.
 
 ## Commands
 
@@ -26,6 +27,7 @@ directory (folder) and you are good to go. No need to configure anything.
 | `/setwarp <name>`  | Set a warp location.                              | `/setwarp MyWarp`    |
 | `/warp <name>`     | Teleport to a warp.                               | `/warp MyWarp`       |
 | `/warps`           | List available warps.                             | `/warps`             |
+| `/delwarp`         | Delete a warp location.                           | `/warps MyWarp`      |
 
 ## Installation
 
@@ -43,6 +45,7 @@ directory (folder) and you are good to go. No need to configure anything.
 6. To set a warp location, use the `/setwarp <name>` command.
 7. To teleport to a warp, use the `/warp <name>` command.
 8. To list available warps, use the `/warps` command.
+9. To delete a warp location, use the `/warp <name>` command.
 
 ## Permissions
 
