@@ -24,7 +24,6 @@
 
 package com.gliesestudio.mc.model;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -35,31 +34,6 @@ import java.util.UUID;
  * @version 1.0
  * @since 1.0
  */
-public class TPARequest implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = -6482985386023709154L;
-
-    private final UUID requester;
-    private final UUID player;
-    private final UUID teleportToPlayer;
-
-    public TPARequest(UUID requester, UUID player, UUID teleportToPlayer) {
-        this.requester = requester;
-        this.player = player;
-        this.teleportToPlayer = teleportToPlayer;
-    }
-
-    public UUID getRequester() {
-        return requester;
-    }
-
-    public UUID getPlayer() {
-        return player;
-    }
-
-    public UUID getTeleportToPlayer() {
-        return teleportToPlayer;
-    }
+public record TPARequest(UUID requester, UUID player, UUID teleportToPlayer) implements Serializable {
 
 }

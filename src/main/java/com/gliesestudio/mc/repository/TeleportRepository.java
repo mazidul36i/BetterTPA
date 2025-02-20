@@ -19,14 +19,18 @@ import java.util.UUID;
  */
 public class TeleportRepository {
 
-    public static final long requestTimeout = 30L; // 30 seconds for timeout
+    private TeleportRepository() {
+        throw new IllegalStateException("All variables and methods are static and directly accessible.");
+    }
+
+    public static final long REQUEST_TIMEOUT = 30L; // 30 seconds for timeout
 
     private static final Map<UUID, TPARequest> tpaRequests = new HashMap<>();
     private static final Map<UUID, BukkitRunnable> pendingTeleports = new HashMap<>();
     private static final Map<UUID, Location> lastLocations = new HashMap<>();
 
     /*============================
-    ||     Teleport Requests     ||
+    |      Teleport Requests      |
      ============================*/
 
     public static void addTpaRequest(UUID playerUuid, TPARequest tpaRequest) {
@@ -47,7 +51,7 @@ public class TeleportRepository {
     }
 
     /*============================
-    ||     Pending Teleports     ||
+    |      Pending Teleports      |
      ============================*/
 
     /**
@@ -77,7 +81,7 @@ public class TeleportRepository {
     }
 
     /*============================
-    ||      Last Locations       ||
+    |       Last Locations        |
      ============================*/
 
     public static void setLastLocation(UUID playerUuid, Location lastLocation) {
