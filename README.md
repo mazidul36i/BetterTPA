@@ -49,9 +49,9 @@ directory (folder) and you are good to go. No need to configure anything.
 
 ## Permissions
 
-| Permission      | Description       |
-|-----------------|-------------------|
-| `bettertpa.tpa` | Allows players to |
+| Permission      | Description                                      |
+|-----------------|--------------------------------------------------|
+| `bettertpa.tpa` | Allows players to use the teleportation commands |
 
 ## Contribution
 
