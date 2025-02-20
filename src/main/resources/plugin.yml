@@ -6,43 +6,84 @@ authors: [ Mazidul Islam ]
 description: Better TPA is the goto plugin to manage player tpa and set warps with ease.
 website: https://mazidul.com
 
+permissions:
+  bettertpa.tpa:
+    default: true
+    description: Allows a player to use the tpa command.
+  bettertpa.back:
+    default: true
+    description: Allows a player to use the back command.
+  bettertpa.warp:
+    default: true
+    description: Allows a player to use the warp command.
+  bettertpa.setwarp:
+    default: false
+    description: Allows a player to use the setwarp command.
+  bettertpa.delwarp:
+    default: false
+    description: Allows a player to use the delwarp command.
+
 commands:
+  bettertpa:
+    description: Reload plugin configurations.
+    usage: /bettertpa <reload|help>
+
   tpa:
     description: Request to teleport to another player.
     usage: /tpa <player>
+    permission: bettertpa.tpa
+    permission-message: You do not have permission to use this command.
+
   tphere:
     description: Request to teleport another player to you.
     usage: /tphere <player>
+    permission: bettertpa.tpa
+    permission-message: You do not have permission to use this command.
+
   tpaccept:
     description: Accept a teleport request.
     usage: /tpaccept
     aliases:
       - accept
+    permission: bettertpa.tpa
+    permission-message: You do not have permission to use this command.
+
   tpdeny:
     description: Deny a teleport request.
     usage: /tpdeny
     aliases:
       - deny
+    permission: bettertpa.tpa
+    permission-message: You do not have permission to use this command.
+
   back:
     description: Teleport back to your last death or TPA location
     usage: /back
     aliases:
       - tpback
+    permission: bettertpa.back
+    permission-message: You do not have permission to use this command.
 
   setwarp:
     description: Set a warp location.
     usage: /setwarp <name>
+    permission: bettertpa.setwarp
+    permission-message: You do not have permission to use this command.
 
   warp:
     description: Teleport to a warp.
     usage: /warp <name>
+    permission: bettertpa.warp
+    permission-message: You do not have permission to use this command.
 
   warps:
     description: List available warps.
     usage: /warps
+    permission: bettertpa.warp
+    permission-message: You do not have permission to use this command.
 
   delwarp:
     description: Delete a warp location.
     usage: /delwarp <name>
-    permission: bettertpa.delwarp # Add a permission node
+    permission: bettertpa.delwarp
     permission-message: §cYou don't have permission to use this command.

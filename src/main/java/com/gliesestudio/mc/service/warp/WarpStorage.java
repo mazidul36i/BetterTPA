@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static org.bukkit.Bukkit.getServer;
@@ -74,9 +75,11 @@ public class WarpStorage {
         this.file = new File(dataFolder, CONFIG_FILE);
         if (!file.exists()) {
             try {
-                file.createNewFile();
+                if (file.createNewFile()) {
+                    logger.info("Created config file 'warps.yml'");
+                }
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.SEVERE, "Failed to create config file 'warps.yml'", e);
             }
         }
         this.config = YamlConfiguration.loadConfiguration(file);
@@ -120,10 +123,9 @@ public class WarpStorage {
     private void loadWarps() {
         Configuration configRoot = config.getRoot();
         if (configRoot != null) {
-            logger.info("Root keys: " + config.getRoot().getKeys(false));
+            logger.info("Loading warps...");
             for (String warpName : configRoot.getKeys(false)) {
                 String worldName = config.getString(warpName + WARP_PATH_WORLD);
-                String desc = config.getString(warpName + WARP_PATH_DESC);
                 double x = config.getDouble(warpName + WARP_PATH_X);
                 double y = config.getDouble(warpName + WARP_PATH_Y);
                 double z = config.getDouble(warpName + WARP_PATH_Z);
@@ -131,7 +133,7 @@ public class WarpStorage {
                 float pitch = (float) config.getDouble(warpName + WARP_PATH_PITCH);
 
                 if (worldName == null) {
-                    logger.severe("World name is not found for warp " + warpName + ".");
+                    logger.log(Level.WARNING, "Missing world name for warp '{}'", warpName);
                     continue;
                 }
                 Location location = new Location(
@@ -146,7 +148,7 @@ public class WarpStorage {
         try {
             config.save(file);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(Level.SEVERE, "Failed to save config file 'warps.yml'", e);
         }
     }
 }

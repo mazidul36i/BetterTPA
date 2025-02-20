@@ -87,9 +87,6 @@ public final class BetterTPA extends JavaPlugin implements Listener {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (sender instanceof Player player) {
-            /*for (int i = 0; i < args.length; i++) {
-                args[i] = args[i].replaceAll("&", "§");
-            }*/
             switch (command.getName().toLowerCase()) {
 
                 case "tpa" -> {
@@ -144,13 +141,11 @@ public final class BetterTPA extends JavaPlugin implements Listener {
                 case "warps" -> handleWarpsCommand(player);
 
                 case "delwarp" -> {
-                    if (sender.hasPermission("bettertpa.delwarp")) {
-                        if (args.length != 1) {
-                            player.sendMessage("§cInvalid command! Usage: /delwarp <name>");
-                            return true;
-                        }
-                        handleDelWarpCommand(player, args[0]);
+                    if (args.length < 2) {
+                        player.sendMessage("§cInvalid command! Usage: /delwarp <name> confirm");
+                        return true;
                     }
+                    handleDelWarpCommand(player, args[0]);
                 }
 
                 default -> {
@@ -216,9 +211,9 @@ public final class BetterTPA extends JavaPlugin implements Listener {
     private void handleTPAccept(@NotNull Player sender) {
         TPARequest pendingRequest = TeleportRepository.getTpaRequest(sender.getUniqueId());
         if (pendingRequest != null) {
-            Player requester = Bukkit.getPlayer(pendingRequest.getRequester());
-            Player tpaPlayer = Bukkit.getPlayer(pendingRequest.getPlayer());
-            Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.getTeleportToPlayer());
+            Player requester = Bukkit.getPlayer(pendingRequest.requester());
+            Player tpaPlayer = Bukkit.getPlayer(pendingRequest.player());
+            Player tpaToPlayer = Bukkit.getPlayer(pendingRequest.teleportToPlayer());
             if (tpaPlayer != null && tpaPlayer.isOnline() && tpaToPlayer != null && tpaToPlayer.isOnline()) {
                 // Start the delayed teleport
                 assert requester != null;
@@ -238,7 +233,7 @@ public final class BetterTPA extends JavaPlugin implements Listener {
     private void handleTPDeny(@NotNull Player sender) {
         TPARequest pendingRequest = TeleportRepository.getTpaRequest(sender.getUniqueId());
         if (pendingRequest != null) {
-            Player requester = Bukkit.getPlayer(pendingRequest.getRequester());
+            Player requester = Bukkit.getPlayer(pendingRequest.requester());
             TeleportRepository.removeTpaRequest(sender.getUniqueId());
             if (requester != null) {
                 sender.sendMessage(String.format("§eYou have denied the teleport request from %s.", requester.getName()));
@@ -307,7 +302,7 @@ public final class BetterTPA extends JavaPlugin implements Listener {
                     target.sendMessage(String.format("§eThe teleport request from %s has timed out.", requester.getName()));
                 }
             }
-        }.runTaskLater(this, TeleportRepository.requestTimeout * 20);
+        }.runTaskLater(this, TeleportRepository.REQUEST_TIMEOUT * 20);
     }
 
     // Send clickable TPA accept/deny messages to the target player

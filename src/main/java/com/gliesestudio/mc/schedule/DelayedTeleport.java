@@ -62,7 +62,7 @@ public abstract class DelayedTeleport {
      * @param toPlayer The player who is being teleported to.
      * @return This {@link DelayedTeleport} instance.
      */
-    final public DelayedTeleport playerTeleport(Player player, Player toPlayer) {
+    public final DelayedTeleport playerTeleport(Player player, Player toPlayer) {
         this.teleportType = TeleportType.TO_PLAYER;
         this.player = player;
         this.toPlayer = toPlayer;
@@ -76,7 +76,7 @@ public abstract class DelayedTeleport {
      * @param warpLocation The warp location.
      * @return This {@link DelayedTeleport} instance.
      */
-    final public DelayedTeleport warpTeleport(Player player, Location warpLocation) {
+    public final DelayedTeleport warpTeleport(Player player, Location warpLocation) {
         this.teleportType = TeleportType.WARP;
         this.player = player;
         this.location = warpLocation;
@@ -90,7 +90,7 @@ public abstract class DelayedTeleport {
      * @param lastLocation The last location.
      * @return This {@link DelayedTeleport} instance.
      */
-    final public DelayedTeleport backTeleport(Player player, Location lastLocation) {
+    public final DelayedTeleport backTeleport(Player player, Location lastLocation) {
         this.teleportType = TeleportType.BACK;
         this.player = player;
         this.location = lastLocation;
@@ -103,7 +103,7 @@ public abstract class DelayedTeleport {
      * @param plugin The plugin instance.
      * @param delay  The delay in seconds.
      */
-    final public void start(@NotNull Plugin plugin, long delay) {
+    public final void start(@NotNull Plugin plugin, long delay) {
         this.delay = delay;
         start(plugin);
     }
@@ -113,7 +113,7 @@ public abstract class DelayedTeleport {
      *
      * @param plugin The plugin instance.
      */
-    final public void start(@NotNull Plugin plugin) {
+    public final void start(@NotNull Plugin plugin) {
         // Cancel any previous pending teleport for this player
         TeleportRepository.cancelPendingTeleport(player.getUniqueId());
 
@@ -131,13 +131,13 @@ public abstract class DelayedTeleport {
                 // Call the beforeTeleport method.
                 beforeTeleport();
 
-                if (teleportType == TeleportType.TO_PLAYER)
-                    player.teleport(toPlayer);
-                else if (teleportType == TeleportType.WARP || teleportType == TeleportType.BACK)
-                    player.teleport(location);
-                else {
-                    player.sendMessage("§4Teleport type is null!");
-                    return;
+                switch (teleportType) {
+                    case TeleportType.TO_PLAYER -> player.teleport(toPlayer);
+                    case TeleportType.WARP, TeleportType.BACK -> player.teleport(location);
+                    default -> {
+                        player.sendMessage("§4Teleport type is null!");
+                        return;
+                    }
                 }
 
                 // Call the afterTeleport method.
@@ -170,16 +170,18 @@ public abstract class DelayedTeleport {
      * @param teleportType the type of teleport that happened (TO_PLAYER, WARP, BACK).
      */
     public void afterTeleport(TeleportType teleportType) {
-        if (teleportType == TeleportType.TO_PLAYER) {
-            player.sendMessage(String.format("§aYou have been teleported to %s.", toPlayer.getName()));
-        } else if (teleportType == TeleportType.WARP) {
-            player.teleport(location);
-            player.sendMessage("§aYou have been teleported to the warp location.");
-        } else if (teleportType == TeleportType.BACK) {
-            player.teleport(location);
-            player.sendMessage("§aYou have been teleported back to your last location.");
-        } else {
-            player.sendMessage("§cNo valid teleport target found.");
+        switch (teleportType) {
+            case TeleportType.TO_PLAYER ->
+                    player.sendMessage(String.format("§aYou have been teleported to %s.", toPlayer.getName()));
+            case TeleportType.WARP -> {
+                player.teleport(location);
+                player.sendMessage("§aYou have been teleported to the warp location.");
+            }
+            case TeleportType.BACK -> {
+                player.teleport(location);
+                player.sendMessage("§aYou have been teleported back to your last location.");
+            }
+            default -> player.sendMessage("§cNo valid teleport target found.");
         }
     }
 

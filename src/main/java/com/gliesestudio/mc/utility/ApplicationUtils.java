@@ -9,7 +9,10 @@ import org.bukkit.Location;
  * @version 1.0
  * @since 1.0
  */
-public class ApplicationUtils {
+public final class ApplicationUtils {
+
+    private ApplicationUtils() {
+    }
 
     /**
      * Check if the player has moved from one location to another.
@@ -25,13 +28,13 @@ public class ApplicationUtils {
     }
 
     /**
-     * Round a double to 2 decimal places.
+     * Round a double to 1 decimal places.
      *
      * @param value The double to round.
      * @return The rounded double.
      */
     public static double round(double value) {
-        return round(value, 2);
+        return round(value, 1);
     }
 
     /**
