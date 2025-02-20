@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "com.gliesestudio.mc"
-version = "1.0-alpha"
+version = "1.0"
 
 repositories {
     mavenCentral()
