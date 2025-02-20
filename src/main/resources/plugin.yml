@@ -12,16 +12,16 @@ permissions:
     description: Allows a player to use the tpa command.
   bettertpa.back:
     default: true
-    description: Allows a player to use the back command.
+    description: Allows a player to use the /back command.
   bettertpa.warp:
     default: true
-    description: Allows a player to use the warp command.
+    description: Allows a player to use the warp commands.
   bettertpa.setwarp:
     default: false
-    description: Allows a player to use the setwarp command.
+    description: Allows a player to use the create warp command.
   bettertpa.delwarp:
     default: false
-    description: Allows a player to use the delwarp command.
+    description: Allows a player to use the /delwarp command.
 
 commands:
   bettertpa:
