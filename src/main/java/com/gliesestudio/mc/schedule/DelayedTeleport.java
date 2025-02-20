@@ -158,7 +158,7 @@ public abstract class DelayedTeleport {
         // Play teleport sound
         player.playSound(
                 player,
-                "minecraft:entity.creeper.primed",
+                "minecraft:item.chorus_fruit.teleport",
                 1.2f,
                 1.0f
         );
@@ -209,7 +209,7 @@ public abstract class DelayedTeleport {
                 }
 
                 Location particleLocation = new Location(player.getWorld(), player.getX(), player.getLocation().getY(), player.getZ());
-                player.spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS, particleLocation, 10, 0.35, 0.25, 0.35, 0);
+                player.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS, particleLocation, 10, 0.35, 0.25, 0.35, 0);
                 iterations++;
             }
         }.runTaskTimer(plugin, 0, 1); // Run every tick (20 ticks per second)

@@ -1,5 +1,5 @@
 name: BetterTPA
-version: '1.0-SNAPSHOT'
+version: '1.0'
 main: com.gliesestudio.mc.BetterTPA
 api-version: '1.21'
 authors: [ Mazidul Islam ]
