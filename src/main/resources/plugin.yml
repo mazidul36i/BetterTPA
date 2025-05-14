@@ -17,10 +17,10 @@ permissions:
     default: true
     description: Allows a player to use the warp commands.
   bettertpa.setwarp:
-    default: false
+    default: true
     description: Allows a player to use the create warp command.
   bettertpa.delwarp:
-    default: false
+    default: true
     description: Allows a player to use the /delwarp command.
 
 commands:

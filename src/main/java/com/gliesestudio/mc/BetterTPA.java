@@ -279,7 +279,7 @@ public final class BetterTPA extends JavaPlugin implements Listener {
         if (warpNames.isEmpty()) {
             player.sendMessage("§eNo warps have been set yet.");
         } else {
-            player.sendMessage("§aAvailable warps: §r" + String.join(", ", warpNames));
+            player.sendMessage("§a§lAVAILABLE WARPS:\n§6+ §3" + String.join("\n§6+ §3", warpNames));
         }
     }
 
